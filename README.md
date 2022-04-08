@@ -1,6 +1,6 @@
 # This is a personal practice of the labs of MIT 6.824 2015 (http://nil.csail.mit.edu/6.824/2015/schedule.html)
 
-## Lab2
+## Lab2 Primary/Backup Key/Value Service
 
 Have run the test 100 times without failtures.
 
@@ -48,7 +48,7 @@ in order for viewservice to promote other servers and increase the view, Backup 
 
 This cannot happen, for every client's reqeust, Primary will consult Backup, if network partition or the Backup is Primary, it will reject the forward requests. The worst case is both Primary and Backup continue pings to viewservice but there is no network between them, in this case, client's requests are all dropped and keep retrying until network resumes or one server stops pinging the viewservice. This only affects the availability but not consistency. In real applications, the Primary-Backup comminucation channels can be monitored or servers send heartbeat to each other
 
-## Lab3A
+## Lab3A - Paxos-based Key/Value Service (Paxos Protocol)
 
 Understanding Paxos and implementing Paxos are different, especially for multi-paxos, below are some intakes:
 
@@ -60,7 +60,7 @@ Understanding Paxos and implementing Paxos are different, especially for multi-p
 
 - To ensure each proposal numbers unique, it shifts the server index into the lowest significant bits of proprosal number
 
-## Lab3B
+## Lab3B - Paxos-based Key/Value Service (Key/Value Server)
 
 Implement a key-value store on top of multi-paxos of Lab3A, below are some intakes:
 
@@ -76,11 +76,11 @@ Implement a key-value store on top of multi-paxos of Lab3A, below are some intak
 
 - Noted that for request cache, we cache the key instead of the value, for example, for Get request, this is to ensure that once clients receive response back from Get operation, it will get the lastest status of the database rather than stale data. Another tricky thing is the cache cannot be truncated, because we don't know if there are any duplicate requests coming in (espeically true for some queue-based systems, which has items stuck and pending in the queue for many days or even months, or to redrive for some backfill tasks)
 
-## Lab4A
+## Lab4A - Sharded Key/Value Service (Shard Master)
 
 For shardmaster, the overall code structure mirrors the kvpaxos of Lab3B including how to call paxos, how to wait, how to apply, how to truncate logs, etc. The only difference is the underlaying storage is a list of configurations instead of kv stores. The challenging part is to achieve minmal shard transfers in join/leave-rebalance. The intuitive understanding is that only transfer shards as necessary, don't transfer more than needed. In other words, for groups with more shards, only transfer out as minimal as possible; for groups with less shards, only transfer in as minimal as possible. With new setup of groups, it is easy to come up with the resulting number of shards per group. Sort them in decreasing order and also sorting the groups in decreasing order in terms of their number of shards, in this way, we can compute how many shards need to be transferred. Compare them one-by-one and note down for each group, how many more shards that need to be transfered out and how may less shards that need to be transfered in. Maintain two list of groups: groups need to transfer out shards and groups need to transfer in shards. Then process these two lists and move shards from `more list` to `less list`. To handle join case, the newGroup needs to be in `less list` and for leave case, the leavingGroup needs to be in `more list`
 
-## Lab4B
+## Lab4B - Sharded Key/Value Service (Sharded Key/Value Server)
 
 Similar to Lab4A, the overral code structure mirrors that kvpaxos of Lab3B but supporting reconfiguration. All the reconfiguration steps are proposed and decided for certain Paxos instance index. And during the application loop, apply those reconfigurations, same as all other KV queries (in this way each sever can ensure the reconfiguration has been applied in majority of servers before applying current one). But below are some caveats or insights when implement it
 
@@ -96,7 +96,7 @@ Similar to Lab4A, the overral code structure mirrors that kvpaxos of Lab3B but s
 
 - In implementation, because both KV and reconfiguration operations are multiplexing into Paxos log, so the each log's entry structure needs to accomodate both cases. For request's clientId, it will be the server-id in terms of reconfiguration operations (the final bug is found because I did not putting clientIds at all); for request's requestId, it will be the configNum in terms of reconfiguration operations; for request's value, it will be the serilzied string value of reconfiguration data
 
-## Lab 5
+## Lab 5 - Persistence
 
 This lab caught two issues of previous KVPaxos:
 
