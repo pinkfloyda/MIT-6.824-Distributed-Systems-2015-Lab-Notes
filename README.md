@@ -1,6 +1,6 @@
 # This is a personal practice of the labs of MIT 6.824 2015 (http://nil.csail.mit.edu/6.824/2015/schedule.html)
 
-## Lab2 Primary/Backup Key/Value Service
+## Lab2 - Primary/Backup Key/Value Service
 
 Have run the test 100 times without failtures.
 
